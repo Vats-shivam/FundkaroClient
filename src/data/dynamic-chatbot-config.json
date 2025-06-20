@@ -1,0 +1,109 @@
+[
+  {
+    "id": "start",
+    "questionText": "Hello! I'm here to help you with your loan application. Ready to begin?",
+    "inputType": "options",
+    "key": "start_confirmation",
+    "options": [
+      { "label": "Yes, let's start!", "value": "yes" }
+    ],
+    "nextStep": "firstName"
+  },
+  {
+    "id": "firstName",
+    "questionText": "Great! What is your first name?",
+    "inputType": "text",
+    "key": "firstName",
+    "validation": { "required": true },
+    "nextStep": "lastName"
+  },
+  {
+    "id": "lastName",
+    "questionText": "Thanks, {firstName}. What is your last name?",
+    "inputType": "text",
+    "key": "lastName",
+    "validation": { "required": true },
+    "nextStep": "email"
+  },
+  {
+    "id": "email",
+    "questionText": "What's your email address?",
+    "inputType": "email",
+    "key": "emailAddress",
+    "validation": {
+      "required": true,
+      "regex": "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
+      "regexError": "Please enter a valid email address."
+    },
+    "nextStep": "loanType"
+  },
+  {
+    "id": "loanType",
+    "questionText": "What type of loan are you interested in?",
+    "inputType": "options",
+    "key": "loanType",
+    "options": [
+      { "label": "Personal Loan", "value": "personal" },
+      { "label": "Mortgage", "value": "mortgage" },
+      { "label": "Auto Loan", "value": "auto" }
+    ],
+    "nextStep": "loanAmount"
+  },
+  {
+    "id": "loanAmount",
+    "questionText": "How much would you like to borrow? (Enter an amount between $1,000 and $100,000)",
+    "inputType": "number",
+    "key": "loanAmount",
+    "validation": {
+      "required": true,
+      "min": 1000,
+      "max": 100000
+    },
+    "nextStep": "employmentStatus"
+  },
+  {
+    "id": "employmentStatus",
+    "questionText": "What is your current employment status?",
+    "inputType": "options",
+    "key": "employmentStatus",
+    "options": [
+      { "label": "Employed", "value": "employed" },
+      { "label": "Self-Employed", "value": "self-employed" },
+      { "label": "Unemployed", "value": "unemployed" }
+    ],
+    "nextStep": "proofOfIncome"
+  },
+  {
+    "id": "proofOfIncome",
+    "questionText": "Please upload a document for proof of income (e.g., a recent payslip). PDF or DOCX format.",
+    "inputType": "file",
+    "key": "incomeProofFile",
+    "validation": {
+      "required": true,
+      "allowedTypes": ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+    },
+    "nextStep": "photoId"
+  },
+  {
+    "id": "photoId",
+    "questionText": "Thank you. Now, please upload a photo of your ID (e.g., Driver's License).",
+    "inputType": "image",
+    "key": "photoIdImage",
+    "validation": {
+      "required": true,
+      "allowedTypes": ["image/jpeg", "image/png", "image/gif"]
+    },
+    "nextStep": "finalConfirmation"
+  },
+  {
+    "id": "finalConfirmation",
+    "questionText": "Thank you, {firstName}! We have collected all the necessary information. Your application is now under review. We will contact you at {emailAddress} shortly.",
+    "inputType": "final",
+    "nextStep": "end"
+  },
+  {
+    "id": "end",
+    "questionText": "The chat has ended. You can view your submitted data below.",
+    "inputType": null
+  }
+]

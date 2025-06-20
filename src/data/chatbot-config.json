@@ -1,0 +1,201 @@
+{
+  "chatbotConfig": {
+    "title": "Loan Application Assistant",
+    "welcomeMessage": "Hi! I'm here to help you with your loan application. I'll ask you a few questions to get started.",
+    "steps": [
+      {
+        "id": "personal_info",
+        "question": "Let's start with your personal information. What's your full name?",
+        "type": "text",
+        "field": "fullName",
+        "validation": {
+          "required": true,
+          "minLength": 2,
+          "pattern": "^[a-zA-Z\\s]+$"
+        },
+        "errorMessage": "Please enter a valid full name (letters and spaces only)",
+        "nextStep": "email"
+      },
+      {
+        "id": "email",
+        "question": "Great! Now, what's your email address?",
+        "type": "email",
+        "field": "email",
+        "validation": {
+          "required": true,
+          "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+        },
+        "errorMessage": "Please enter a valid email address",
+        "nextStep": "phone"
+      },
+      {
+        "id": "phone",
+        "question": "What's your phone number?",
+        "type": "tel",
+        "field": "phone",
+        "validation": {
+          "required": true,
+          "pattern": "^[0-9]{10}$"
+        },
+        "errorMessage": "Please enter a valid 10-digit phone number",
+        "nextStep": "age"
+      },
+      {
+        "id": "age",
+        "question": "How old are you?",
+        "type": "number",
+        "field": "age",
+        "validation": {
+          "required": true,
+          "min": 18,
+          "max": 80
+        },
+        "errorMessage": "Age must be between 18 and 80 years",
+        "nextStep": "employment_type"
+      },
+      {
+        "id": "employment_type",
+        "question": "What's your employment type?",
+        "type": "select",
+        "field": "employmentType",
+        "options": [
+          { "value": "salaried", "label": "Salaried Employee" },
+          { "value": "self_employed", "label": "Self Employed" },
+          { "value": "business", "label": "Business Owner" },
+          { "value": "freelancer", "label": "Freelancer" }
+        ],
+        "validation": {
+          "required": true
+        },
+        "errorMessage": "Please select your employment type",
+        "nextStep": "monthly_income"
+      },
+      {
+        "id": "monthly_income",
+        "question": "What's your monthly income? (in ₹)",
+        "type": "number",
+        "field": "monthlyIncome",
+        "validation": {
+          "required": true,
+          "min": 15000
+        },
+        "errorMessage": "Monthly income should be at least ₹15,000",
+        "nextStep": "loan_amount"
+      },
+      {
+        "id": "loan_amount",
+        "question": "How much loan amount do you need? (in ₹)",
+        "type": "number",
+        "field": "loanAmount",
+        "validation": {
+          "required": true,
+          "min": 50000,
+          "max": 10000000
+        },
+        "errorMessage": "Loan amount should be between ₹50,000 and ₹1,00,00,000",
+        "nextStep": "loan_purpose"
+      },
+      {
+        "id": "loan_purpose",
+        "question": "What's the purpose of this loan?",
+        "type": "select",
+        "field": "loanPurpose",
+        "options": [
+          { "value": "home", "label": "Home Purchase" },
+          { "value": "personal", "label": "Personal Use" },
+          { "value": "business", "label": "Business Expansion" },
+          { "value": "education", "label": "Education" },
+          { "value": "medical", "label": "Medical Emergency" },
+          { "value": "wedding", "label": "Wedding" },
+          { "value": "travel", "label": "Travel" },
+          { "value": "other", "label": "Other" }
+        ],
+        "validation": {
+          "required": true
+        },
+        "errorMessage": "Please select the loan purpose",
+        "nextStep": "cibil_score"
+      },
+      {
+        "id": "cibil_score",
+        "question": "Do you know your CIBIL score?",
+        "type": "select",
+        "field": "cibilKnown",
+        "options": [
+          { "value": "yes", "label": "Yes, I know my CIBIL score" },
+          { "value": "no", "label": "No, I don't know" }
+        ],
+        "validation": {
+          "required": true
+        },
+        "errorMessage": "Please select an option",
+        "conditionalNext": {
+          "yes": "cibil_score_value",
+          "no": "city"
+        }
+      },
+      {
+        "id": "cibil_score_value",
+        "question": "What's your CIBIL score?",
+        "type": "number",
+        "field": "cibilScore",
+        "validation": {
+          "required": true,
+          "min": 300,
+          "max": 900
+        },
+        "errorMessage": "CIBIL score should be between 300 and 900",
+        "nextStep": "city"
+      },
+      {
+        "id": "city",
+        "question": "Which city are you located in?",
+        "type": "text",
+        "field": "city",
+        "validation": {
+          "required": true,
+          "minLength": 2
+        },
+        "errorMessage": "Please enter a valid city name",
+        "nextStep": "existing_loans"
+      },
+      {
+        "id": "existing_loans",
+        "question": "Do you have any existing loans?",
+        "type": "select",
+        "field": "hasExistingLoans",
+        "options": [{ "value": "yes", "label": "Yes" }, { "value": "no", "label": "No" }],
+        "validation": {
+          "required": true
+        },
+        "errorMessage": "Please select an option",
+        "conditionalNext": {
+          "yes": "existing_loan_amount",
+          "no": "completion"
+        }
+      },
+      {
+        "id": "existing_loan_amount",
+        "question": "What's your total existing loan EMI amount per month? (in ₹)",
+        "type": "number",
+        "field": "existingLoanEmi",
+        "validation": {
+          "required": true,
+          "min": 0
+        },
+        "errorMessage": "Please enter a valid EMI amount",
+        "nextStep": "completion"
+      },
+      {
+        "id": "completion",
+        "question": "Thank you for providing all the information! I've collected all your details. Would you like to proceed with the loan application?",
+        "type": "completion",
+        "field": "completion",
+        "options": [
+          { "value": "proceed", "label": "Yes, proceed with application" },
+          { "value": "review", "label": "Let me review the details first" }
+        ]
+      }
+    ]
+  }
+}
