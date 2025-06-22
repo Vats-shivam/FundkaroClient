@@ -1,133 +1,252 @@
 [
   {
     "id": "start",
-    "questionText": "Hello! I'm here to help you with your loan application. Ready to begin?",
+    "questionText": "Hello! I can help you apply for a loan. First, who are you applying for?",
     "inputType": "options",
-    "key": "start_confirmation",
+    "key": "applicantType",
     "options": [
-      { "label": "Yes, let's start!", "value": "yes" }
+      { "label": "For Myself", "value": "self" },
+      { "label": "On Behalf of Someone Else", "value": "onBehalfOf" },
+      { "label": "As a Club/Group", "value": "club" }
     ],
-    "nextStep": "firstName"
+    "nextStep": "handle_applicant_type"
   },
   {
-    "id": "firstName",
-    "questionText": "Great! What is your first name?",
-    "inputType": "text",
-    "key": "firstName",
-    "validation": { "required": true },
-    "nextStep": "lastName"
+    "id": "handle_applicant_type",
+    "inputType": "logic",
+    "key": "applicantType",
+    "nextSteps": {
+      "self": "ask_loan_type",
+      "onBehalfOf": "select_beneficiary",
+      "club": "select_club_members"
+    }
   },
   {
-    "id": "lastName",
-    "questionText": "Thanks, {firstName}. What is your last name?",
-    "inputType": "text",
-    "key": "lastName",
-    "validation": { "required": true },
-    "nextStep": "email"
+    "id": "select_beneficiary",
+    "questionText": "Please select the person you're applying for from your saved profiles.",
+    "inputType": "profile_select",
+    "key": "beneficiary",
+    "nextStep": "ask_loan_type"
   },
   {
-    "id": "email",
-    "questionText": "What's your email address?",
-    "inputType": "email",
-    "key": "emailAddress",
-    "validation": {
-      "required": true,
-      "regex": "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
-      "regexError": "Please enter a valid email address."
-    },
-    "nextStep": "loanType"
+    "id": "select_club_members",
+    "questionText": "Please select all members for this club application.",
+    "inputType": "profile_multiselect",
+    "key": "clubMembers",
+    "nextStep": "ask_loan_type"
   },
   {
-    "id": "loanType",
+    "id": "ask_loan_type",
     "questionText": "What type of loan are you interested in?",
     "inputType": "options",
     "key": "loanType",
     "options": [
-      { "label": "Personal Loan", "value": "personal" },
-      { "label": "Mortgage", "value": "mortgage" },
-      { "label": "Auto Loan", "value": "auto" }
+      { "label": "Personal Loan", "value": "Personal" },
+      { "label": "Home Loan", "value": "Home" },
+      { "label": "Car Loan", "value": "Car" },
+      { "label": "Business Loan", "value": "Business" }
     ],
-    "nextStep": "loanAmount"
+    "nextStep": "ask_first_name"
   },
   {
-    "id": "loanAmount",
-    "questionText": "How much would you like to borrow? (Enter an amount between $1,000 and $100,000)",
-    "inputType": "number",
-    "key": "loanAmount",
+    "id": "ask_first_name",
+    "questionText": "Great! What is the primary applicant's first name?",
+    "inputType": "text",
+    "key": "firstName",
+    "nextStep": "ask_last_name",
+    "validation": { "required": true }
+  },
+  {
+    "id": "ask_last_name",
+    "questionText": "And the last name?",
+    "inputType": "text",
+    "key": "lastName",
+    "nextStep": "ask_pan_number",
+    "validation": { "required": true }
+  },
+  {
+    "id": "ask_pan_number",
+    "questionText": "Thanks, {firstName}. Please enter your 10-digit PAN number.",
+    "inputType": "text",
+    "key": "panNumber",
     "validation": {
       "required": true,
-      "min": 1000,
-      "max": 100000
+      "regex": "^[A-Z]{5}[0-9]{4}[A-Z]{1}$",
+      "regexError": "Please enter a valid PAN number (e.g., ABCDE1234F)."
     },
-    "nextStep": "employmentStatus"
+    "nextStep": "ask_employment_type"
   },
   {
-    "id": "employmentStatus",
-    "questionText": "What is your current employment status?",
+    "id": "ask_employment_type",
+    "questionText": "What is your employment type?",
     "inputType": "options",
-    "key": "employmentStatus",
+    "key": "employmentType",
     "options": [
-      { "label": "Employed", "value": "employed" },
-      { "label": "Self-Employed", "value": "self-employed" },
-      { "label": "Unemployed", "value": "unemployed" }
+      { "label": "Salaried", "value": "Salaried" },
+      { "label": "Self-Employed / Business", "value": "Self-Employed" }
     ],
-    "nextStep": "proofOfIncome"
+    "nextStep": "handle_employment_branch"
   },
   {
-    "id": "proofOfIncome",
-    "questionText": "Please upload a document for proof of income (e.g., a recent payslip). PDF or DOCX format.",
-    "inputType": "file",
-    "key": "incomeProofFile",
-    "validation": {
-      "required": true,
-      "allowedTypes": ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
-    },
-    "nextStep": "photoId"
+    "id": "handle_employment_branch",
+    "comment": "This step directs the flow based on the user's employment type.",
+    "inputType": "logic",
+    "key": "employmentType",
+    "nextSteps": {
+      "Salaried": "ask_company_name",
+      "Self-Employed": "ask_business_name"
+    }
+  },
+  {
+    "id": "ask_company_name",
+    "questionText": "What is the name of your company?",
+    "inputType": "text",
+    "key": "companyName",
+    "nextStep": "ask_monthly_income",
+    "validation": { "required": true }
+  },
+  {
+    "id": "ask_monthly_income",
+    "questionText": "And what is your net monthly income (in INR)?",
+    "inputType": "number",
+    "key": "monthlyIncome",
+    "nextStep": "handle_loan_specific_branch",
+    "validation": { "required": true, "min": 0 }
+  },
+  {
+    "id": "ask_business_name",
+    "questionText": "What is the name of your business?",
+    "inputType": "text",
+    "key": "businessName",
+    "nextStep": "ask_annual_turnover",
+    "validation": { "required": true }
+  },
+  {
+    "id": "ask_annual_turnover",
+    "questionText": "What is your approximate annual turnover (in INR)?",
+    "inputType": "number",
+    "key": "annualTurnover",
+    "nextStep": "handle_loan_specific_branch",
+    "validation": { "required": true, "min": 0 }
+  },
+  {
+    "id": "handle_loan_specific_branch",
+    "comment": "This step asks loan-specific questions if needed, or skips to documents.",
+    "inputType": "logic",
+    "key": "loanType",
+    "nextSteps": {
+      "Home": "ask_property_identified",
+      "Car": "ask_car_type",
+      "Personal": "upload_pan",
+      "Business": "upload_pan"
+    }
+  },
+  {
+    "id": "ask_property_identified",
+    "questionText": "For your Home Loan, have you identified a property yet?",
+    "inputType": "options",
+    "key": "propertyIdentified",
+    "options": [
+      { "label": "Yes", "value": "Yes" },
+      { "label": "No, still looking", "value": "No" }
+    ],
+    "nextStep": "handle_property_branch"
+  },
+  {
+    "id": "handle_property_branch",
+    "inputType": "logic",
+    "key": "propertyIdentified",
+    "nextSteps": {
+      "Yes": "ask_property_value",
+      "No": "upload_pan"
+    }
+  },
+  {
+    "id": "ask_property_value",
+    "questionText": "What is the approximate value of the property?",
+    "inputType": "number",
+    "key": "propertyValue",
+    "nextStep": "upload_pan",
+    "validation": { "required": true }
+  },
+  {
+    "id": "ask_car_type",
+    "questionText": "For your Car Loan, are you buying a new or a used car?",
+    "inputType": "options",
+    "key": "carType",
+    "options": [
+      { "label": "New Car", "value": "New" },
+      { "label": "Used Car", "value": "Used" }
+    ],
+    "nextStep": "ask_car_price"
+  },
+  {
+    "id": "ask_car_price",
+    "questionText": "What is the on-road price of the car?",
+    "inputType": "number",
+    "key": "carPrice",
+    "nextStep": "upload_pan",
+    "validation": { "required": true }
   },
   {
     "id": "upload_pan",
-    "questionText": "Great! Please upload your PAN Card.",
+    "questionText": "Now, let's upload some documents. Please provide a clear image of the PAN Card.",
     "inputType": "image",
     "key": "panCard",
-    "nextStep": "upload_aadhaar",
     "documentType": "PAN Card",
-    "validation": {
-      "required": true,
-      "allowedTypes": ["image/jpeg", "image/png", "application/pdf"]
-    }
+    "nextStep": "upload_aadhaar",
+    "validation": { "required": true }
   },
   {
     "id": "upload_aadhaar",
-    "questionText": "Thank you, {firstName}. Now, please upload your Aadhaar Card.",
+    "questionText": "Great. Please upload a clear image of the Aadhaar Card (both sides).",
     "inputType": "image",
     "key": "aadhaarCard",
-    "nextStep": "processing",
-    "documentType": "Aadhaar Card", 
-    "validation": {
-      "required": true,
-      "allowedTypes": ["image/jpeg", "image/png", "application/pdf"]
+    "documentType": "Aadhaar Card",
+    "nextStep": "handle_document_branch",
+    "validation": { "required": true }
+  },
+  {
+    "id": "handle_document_branch",
+    "comment": "This step requests different documents based on employment type.",
+    "inputType": "logic",
+    "key": "employmentType",
+    "nextSteps": {
+      "Salaried": "upload_salary_slip",
+      "Self-Employed": "upload_itr"
     }
   },
   {
-    "id": "photoId",
-    "questionText": "Thank you. Now, please upload a photo of your ID (e.g., Driver's License).",
-    "inputType": "image",
-    "key": "photoIdImage",
-    "validation": {
-      "required": true,
-      "allowedTypes": ["image/jpeg", "image/png", "image/gif"]
-    },
-    "nextStep": "finalConfirmation"
+    "id": "upload_salary_slip",
+    "questionText": "Please upload your last 3 months' salary slips.",
+    "inputType": "file",
+    "key": "salarySlips",
+    "documentType": "Salary Slip",
+    "nextStep": "ask_consent",
+    "validation": { "required": true, "allowedTypes": ["application/pdf"] }
   },
   {
-    "id": "finalConfirmation",
-    "questionText": "Thank you, {firstName}! We have collected all the necessary information. Your application is now under review. We will contact you at {emailAddress} shortly.",
-    "inputType": "final",
+    "id": "upload_itr",
+    "questionText": "Please upload your last 2 years' Income Tax Returns (ITR).",
+    "inputType": "file",
+    "key": "itr",
+    "documentType": "ITR",
+    "nextStep": "ask_consent",
+    "validation": { "required": true, "allowedTypes": ["application/pdf"] }
+  },
+  {
+    "id": "ask_consent",
+    "questionText": "Almost done! Please review our terms and conditions and click 'I Agree' to submit your application.",
+    "inputType": "options",
+    "key": "consentGiven",
+    "options": [
+      { "label": "I Agree", "value": "Yes" }
+    ],
     "nextStep": "end"
   },
   {
     "id": "end",
-    "questionText": "The chat has ended. You can view your submitted data below.",
-    "inputType": null
+    "questionText": "Thank you, {firstName}! Your application has been submitted successfully. We will review the details and get back to you shortly. You will now be redirected to your dashboard.",
+    "inputType": "final"
   }
 ]

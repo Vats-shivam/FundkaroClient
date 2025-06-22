@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
 import { UserContext } from '../context/UserContext';
 // import axios from 'axios';
+import loanFlow from '../data/dynamic-chatbot-config.json';
 import logo from "../assets/fundkaro.svg";
 
 // --- ICONS ---
@@ -11,25 +12,22 @@ import { IoPersonSharp, IoPeopleSharp, IoBusinessSharp, IoHomeSharp, IoCarSportS
 // --- DUMMY DATA FOR A SINGLE LOAN APPLICATION ---
 // This simulates the detailed data you would fetch from your API using the loanID
 const dummyLoanDetails = {
-  _id: "app002",
-  applicantType: 'onBehalfOf',
-  beneficiary: { name: "Jane Doe", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
-  categoryId: { category: "Home Loan" },
-  status: "Pending", // Overall status
-  isSelectionDone: false,
-  messageFromAdmin: "Your application is under review. Please ensure all documents are uploaded correctly.",
+    _id: "app002",
+    // This top-level info is for display logic
+    applicantType: 'onBehalfOf', 
+    beneficiary: { name: "Jane Doe", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
+    categoryId: { category: "Home Loan" },
+    status: "Pending",
+    
+    // This object holds the actual data collected by the chatbot
+    formData: {
+      applicantType: 'onBehalfOf', // Data collected
+      beneficiary: { _id: "profile002", fullName: "Jane Doe" }, // Data collected
+      firstName: "Jane", // Data collected
+      loanAmount: "500000", // Data collected
+      panCard: { name: 'jane_pan.pdf', url: '#' }, // Represents a file object
+    },
   
-  // 1. User-submitted form data
-  formFields: [
-    { name: "Full Name", value: "Jane Doe" },
-    { name: "Email Address", value: "jane.doe@example.com" },
-    { name: "Phone Number", value: "+91 98765 43210" },
-    { name: "Date of Birth", value: "1990-05-15" },
-    { name: "Current Address", value: "123 Maple Street, Anytown" },
-    { name: "Employment Type", value: "Salaried" },
-    { name: "Monthly Income", value: "₹85,000" },
-  ],
-
   // 2. Documents with status
   documents: [
     { name: "PAN Card", status: "Verified", fileUrl: "#" },
@@ -137,17 +135,68 @@ const ApplicationSummaryCard = ({ loan }) => {
 };
 
 // --- TABS ---
+const ApplicationDetailsTab = ({ formData }) => {
+  // A helper function to format keys like 'firstName' into 'First Name'
+  const formatLabel = (key) => {
+    if (!key) return '';
+    // Add a space before each capital letter, then capitalize the first letter
+    const result = key.replace(/([A-Z])/g, ' $1');
+    return result.charAt(0).toUpperCase() + result.slice(1);
+  };
 
-const ApplicationDetailsTab = ({ fields }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-    {fields.map(field => (
-      <div key={field.name}>
-        <label className="text-sm font-medium text-gray-500">{field.name}</label>
-        <p className="text-base text-gray-800 font-semibold mt-1 bg-gray-100 p-3 rounded-md">{field.value || 'Not Provided'}</p>
-      </div>
-    ))}
-  </div>
-);
+  // A helper to render different value types gracefully
+  const renderValue = (value) => {
+    // Case 1: Value is a file-like object (from new upload or existing doc)
+    if (typeof value === 'object' && value !== null && (value.name || value.url || value.fileUrl)) {
+      return (
+        <a href={value.url || value.fileUrl || '#'} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+          {value.name || 'View File'}
+        </a>
+      );
+    }
+    // Case 2: Value is a profile-like object (from beneficiary select)
+    if (typeof value === 'object' && value !== null && (value.fullName || value.firstName)) {
+      return value.fullName || `${value.firstName} ${value.lastName || ''}`;
+    }
+    // Case 3: Value is an array of profile objects (from club select)
+    if (Array.isArray(value)) {
+      return value.map(item => item.fullName || item.firstName).join(', ');
+    }
+    // Case 4: Default for strings, numbers, etc.
+    return String(value) || 'Not Provided';
+  };
+
+  // These are metadata keys that are usually displayed elsewhere (e.g., in the summary card)
+  // and should not be repeated in the details list.
+  const EXCLUDED_KEYS = ['applicantType', 'beneficiary', 'clubMembers'];
+
+  // Filter the formData to get only the fields we want to display
+  const displayFields = Object.entries(formData || {})
+    .filter(([key]) => !EXCLUDED_KEYS.includes(key) && formData[key] !== null && formData[key] !== undefined)
+    .map(([key, value]) => ({
+      label: formatLabel(key),
+      value: value,
+    }));
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+      {displayFields.length > 0 ? (
+        displayFields.map(({ label, value }) => (
+          <div key={label}>
+            <label className="text-sm font-medium text-gray-500">{label}</label>
+            <div className="text-base text-gray-800 font-semibold mt-1 bg-gray-100 p-3 rounded-md min-h-[48px] flex items-center break-words">
+              {renderValue(value)}
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="text-center text-gray-500 py-10 md:col-span-2">
+          <p>No application details have been submitted yet.</p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const DocumentsTab = ({ documents }) => {
     const handleReupload = (docName) => {
@@ -334,7 +383,7 @@ const LoanDetails = () => {
                     </nav>
                 </div>
                 <div className="p-6">
-                    {activeTab === 'details' && <ApplicationDetailsTab fields={loan.formFields} />}
+                    {activeTab === 'details' && <ApplicationDetailsTab formData={dummyLoanDetails.formData} flowConfig={loanFlow} />}
                     {activeTab === 'documents' && <DocumentsTab documents={loan.documents} />}
                     {activeTab === 'chat' && <CommunicationTab messages={loan.communications} />}
                 </div>
