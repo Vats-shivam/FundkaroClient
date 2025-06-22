@@ -54,7 +54,7 @@ const Accounts = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-6 bg-gray-50">
+    <div className="flex flex-col lg:flex-row gap-6 p-6">
       {/* Credit Score Section */}
       <div className="lg:w-1/3">
         <h2 className="text-3xl font-bold text-gray-800 mb-6">Credit Score</h2>
