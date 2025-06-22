@@ -22,7 +22,7 @@ const Sidebar = () => {
     navigate(`/profile/${user._id}`)
   }
   const handleAppliedLoans = ()=>{
-    navigate(`/applied-loans/${user._id}`);
+    navigate(`/applied-loans`);
   }
   return (
     <div className='sticky top-16 left-0 h-full bg-white shadow-primaryShadow transition-all duration-1000 linear'>

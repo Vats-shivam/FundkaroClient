@@ -33,14 +33,7 @@ const Accounts = () => {
   //   setShowProfileModal(true)
   // }
 
-  const handleSetDefault = (profileId) => {
-    const updatedProfiles = profiles.map((profile) => ({
-      ...profile,
-      isDefault: profile._id === profileId,
-    }))
-    setProfiles(updatedProfiles)
-    setShowDropdown(null)
-  }
+  
 
   const handleDeleteProfile = (profileId) => {
     const updatedProfiles = profiles.filter((profile) => profile._id !== profileId)
@@ -61,7 +54,7 @@ const Accounts = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-6 bg-gray-50 min-h-screen">
+    <div className="flex flex-col lg:flex-row gap-6 p-6 bg-gray-50">
       {/* Credit Score Section */}
       <div className="lg:w-1/3">
         <h2 className="text-3xl font-bold text-gray-800 mb-6">Credit Score</h2>
@@ -113,7 +106,7 @@ const Accounts = () => {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Existing Profiles */}
           {profiles &&
             profiles.map((profile) => {
@@ -121,9 +114,7 @@ const Accounts = () => {
               return (
                 <div
                   key={profile._id}
-                  className={`bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${
-                    profile.isDefault ? "ring-2 ring-blue-500 ring-opacity-50" : ""
-                  }`}
+                  className={`bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 `}
                 >
                   {/* Profile Header */}
                   <div className="flex justify-between items-start mb-4">
@@ -145,40 +136,7 @@ const Accounts = () => {
                       </div>
                     </div>
 
-                    {/* Dropdown Menu */}
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowDropdown(showDropdown === profile._id ? null : profile._id)}
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                      >
-                        <FiMoreVertical className="text-gray-500" />
-                      </button>
-
-                      {showDropdown === profile._id && (
-                        <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[150px]">
-                          <button
-                            onClick={() => navigate(`/profile/${profile._id}`)}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors"
-                          >
-                            View Details
-                          </button>
-                          {!profile.isDefault && (
-                            <button
-                              onClick={() => handleSetDefault(profile._id)}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors"
-                            >
-                              Set as Default
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteProfile(profile._id)}
-                            className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 transition-colors"
-                          >
-                            Delete Profile
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    
                   </div>
 
                   {/* Profile Info */}

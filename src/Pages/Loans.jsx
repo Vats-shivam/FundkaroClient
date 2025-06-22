@@ -10,6 +10,7 @@ import backwardcoin from "../assets/backwardcoin.png";
 import { IoIosArrowBack } from "react-icons/io";
 import toast, { Toaster } from "react-hot-toast";
 import LoanForm from "../components/LoanForm";
+import { useUser } from "../context/UserContext";
 const dummyLoans = [
   {
     _id: "1",
@@ -123,6 +124,7 @@ const Tooltip = ({ children, content }) => {
 
 const Loans = () => {
   const { categoryID } = useParams();
+  const {user} = useUser();
   const [loans, setLoans] = useState(dummyLoans)
   const [filteredLoans, setFilteredLoans] = useState(dummyLoans)
 
@@ -442,7 +444,7 @@ const Loans = () => {
          <LoanForm
           isVisible={modal}
           onClose={()=>setModalVisible(false)}
-          
+          existingDocuments={user?.documents || []} 
         />
       </div>
     </div>

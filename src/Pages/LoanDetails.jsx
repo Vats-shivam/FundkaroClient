@@ -1,141 +1,346 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
-import { IoIosArrowBack } from 'react-icons/io';
 import { UserContext } from '../context/UserContext';
-import axios from 'axios';
+// import axios from 'axios';
 import logo from "../assets/fundkaro.svg";
 
-const LoanDetails = () => {
-  const { user } = useContext(UserContext);
-  const { loanID } = useParams();
-  const [loan, setLoans] = useState({});
-  const [loading, setLoading] = useState(true);
-  console.log(logo)
+// --- ICONS ---
+import { IoIosArrowBack } from 'react-icons/io';
+import { IoPersonSharp, IoPeopleSharp, IoBusinessSharp, IoHomeSharp, IoCarSportSharp, IoDocumentTextSharp, IoChatbubblesSharp, IoInformationCircleSharp, IoCloudUploadOutline, IoPaperPlaneOutline, IoCheckmarkCircle, IoCloseCircle, IoTime } from 'react-icons/io5';
 
-  function statusColor(status) {
-    switch (status) {
-      case 'Pending':
-        return 'bg-blue-500';
-      case 'Rejected':
-        return 'bg-red-500';
-      case 'Verified':
-        return 'bg-green-500';
+// --- DUMMY DATA FOR A SINGLE LOAN APPLICATION ---
+// This simulates the detailed data you would fetch from your API using the loanID
+const dummyLoanDetails = {
+  _id: "app002",
+  applicantType: 'onBehalfOf',
+  beneficiary: { name: "Jane Doe", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
+  categoryId: { category: "Home Loan" },
+  status: "Pending", // Overall status
+  isSelectionDone: false,
+  messageFromAdmin: "Your application is under review. Please ensure all documents are uploaded correctly.",
+  
+  // 1. User-submitted form data
+  formFields: [
+    { name: "Full Name", value: "Jane Doe" },
+    { name: "Email Address", value: "jane.doe@example.com" },
+    { name: "Phone Number", value: "+91 98765 43210" },
+    { name: "Date of Birth", value: "1990-05-15" },
+    { name: "Current Address", value: "123 Maple Street, Anytown" },
+    { name: "Employment Type", value: "Salaried" },
+    { name: "Monthly Income", value: "₹85,000" },
+  ],
+
+  // 2. Documents with status
+  documents: [
+    { name: "PAN Card", status: "Verified", fileUrl: "#" },
+    { name: "Aadhaar Card", status: "Verified", fileUrl: "#" },
+    { name: "Latest 3 Months Payslip", status: "Pending", fileUrl: "#" },
+    { name: "Bank Statement (6 Months)", status: "Rejected", fileUrl: "#", rejectionReason: "Statement is password protected. Please upload an unlocked PDF." },
+  ],
+
+  // 3. Chat/Communication history
+  communications: [
+    { sender: "Admin", message: "Welcome to Fundkaro! Your application for a Home Loan has been received and is under review.", timestamp: "2023-10-26 10:00 AM" },
+    { sender: "You", message: "Thank you! I've uploaded the initial documents.", timestamp: "2023-10-26 11:30 AM" },
+    { sender: "Admin", message: "We've noticed your bank statement is password-protected. Kindly re-upload an unlocked version.", timestamp: "2023-10-27 02:15 PM" },
+  ]
+};
+
+// --- HELPER CONFIG & COMPONENTS ---
+
+const statusConfig = {
+  Pending: { icon: <IoTime className="text-yellow-500" />, text: 'text-yellow-600', bg: 'bg-yellow-100', border: 'border-yellow-300' },
+  Rejected: { icon: <IoCloseCircle className="text-red-500" />, text: 'text-red-600', bg: 'bg-red-100', border: 'border-red-300' },
+  Verified: { icon: <IoCheckmarkCircle className="text-green-500" />, text: 'text-green-600', bg: 'bg-green-100', border: 'border-green-300' },
+};
+
+const categoryIcons = {
+  "Personal Loan": <IoPersonSharp size={28} />,
+  "Home Loan": <IoHomeSharp size={28} />,
+  "Business Loan": <IoBusinessSharp size={28} />,
+  "Car Loan": <IoCarSportSharp size={28} />,
+};
+
+const ApplicantInfo = ({ loan }) => {
+    // This component is reused from AppliedLoans for consistency
+  const renderInfo = () => {
+    switch (loan.applicantType) {
+      case 'onBehalfOf':
+        return (
+          <div className="flex items-center gap-3">
+            <img src={loan.beneficiary.avatar} alt={loan.beneficiary.name} className="w-12 h-12 rounded-full" />
+            <div>
+               <span className="text-sm text-gray-500">For</span>
+               <span className="block font-semibold text-gray-800 text-lg">{loan.beneficiary.name}</span>
+            </div>
+          </div>
+        );
+      case 'club': /* Add club logic if needed */ return <></>
       default:
-        return 'bg-gray-500';
-    }
-  }
-
-  useEffect(() => {
-    fetchApplication();
-  }, [])
-
-  const fetchApplication = async () => {
-    try {
-      const response = await axios.post("/api/application/findbyid", { userId: user.user, applicationId: loanID });
-      console.log(response.data);
-      if (response.data.status) {
-        setLoans(response.data.application);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+              <IoPersonSharp size={24} />
+            </div>
+             <div>
+               <span className="text-sm text-gray-500">For</span>
+               <span className="block font-semibold text-gray-800 text-lg">You</span>
+            </div>
+          </div>
+        );
     }
   };
+  return <div className="p-1">{renderInfo()}</div>;
+};
 
+const ApplicationSummaryCard = ({ loan }) => {
+  const status = statusConfig[loan.status] || {};
   return (
-    <div className="min-h-screen w-screen py-10">
-      <header className="fixed top-0 z-50 w-full bg-gradient-to-r from-darkPrimary to-lightPrimary flex h-16 items-center py-2 px-4">
-        <img src={logo} className="w-32 h-9 ml-4" alt="Logo" />
-      </header>
+    <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 space-y-6">
+      <div className="flex items-center gap-4 text-blue-600">
+        {categoryIcons[loan.categoryId?.category]}
+        <h2 className="font-bold text-2xl text-gray-800">{loan.categoryId?.category}</h2>
+      </div>
 
-      <Link to="/dashboard" className="absolute top-20 left-10 font-semibold text-blue-500 flex items-center text-xl">
-        <IoIosArrowBack color="blue" />
-        Dashboard
-      </Link>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500 mb-2">APPLICANT</h3>
+        <ApplicantInfo loan={loan} />
+      </div>
 
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-10">
-          <div className="loader"></div>
-          <p className="text-blue-500 text-xl">Loading</p>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500 mb-2">OVERALL STATUS</h3>
+        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${status.bg} ${status.text}`}>
+          {status.icon}
+          {loan.status}
         </div>
-      ) : (
-        <div className="lg:w-[75%] grid grid-cols-1 lg:grid-cols-2 gap-4 mx-auto w-full mt-32">
-          <div className="bg-gradient-to-r from-lightPrimary to-darkPrimary rounded-lg flex flex-col gap-2 p-4 text-lg font-medium text-white border-secondary border-4 shadow-md">
-            <div className="flex items-center mb-2 bg-white p-2 rounded-lg">
-              <img src={loan.categoryId.logo} alt="Category Logo" className="w-8 h-8 mr-2 rounded-full" />
-              <h2 className="font-bold text-xl bg-clip-text inline-block bg-gradient-to-r from-darkPrimary to-lightPrimary font-bold text-transparent">{loan.categoryId.category}</h2>
-            </div>
-            <div className={`p-2 rounded-lg ${statusColor(loan.status)}`}>
-              <p className="text-white font-bold text-center">
-                Application Status: {loan.status}
-              </p>
-            </div>
-
-            {loan.status === 'Verified' && !loan.isSelectionDone && (
-              <Link to={`/select-loans/${loan._id}`} className="block mt-2 bg-green-500 py-2 rounded-lg text-white text-center">
-                Apply Loans
-              </Link>
-            )}
-          </div>
-
-          <div className="rounded-lg p-4 bg-gradient-to-r from-lightPrimary to-darkPrimary text-white shadow-md mb-4">
-            <h3 className="font-bold text-center text-lg mb-3">Applied Loans</h3>
+      </div>
+      
+      {loan.messageFromAdmin && (
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+          <div className="flex items-center gap-3">
+            <IoInformationCircleSharp className="text-blue-500 flex-shrink-0" size={24} />
             <div>
-              {loan.loans.map((loanDetail, index) => (
-                <div key={index} className="border-blue-500 text-white bg-white/[.4] rounded-lg p-4 shadow">
-                  <div className="flex items-center mb-3">
-                    <img src={loanDetail.loan.logo} alt="Loan Logo" className="w-14 h-14 mr-3 rounded-full" />
-                    <div>
-                      <p className="font-bold ">{loanDetail.loan.vendor}</p>
-                      <p className="">Loan Amount: ₹{loanDetail.loan.maxLoanAmount}</p>
-                      <p className="">Interest Rate: {loanDetail.loan.ratesMin}% - {loanDetail.loan.ratesMax}%</p>
-                      <p className="">Tenure: {loanDetail.loan.tenureMin} - {loanDetail.loan.tenureMax} years</p>
-                      <p className="">Selected: {loanDetail.isSelected ? "Yes" : "No"}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+              <p className="font-semibold text-blue-800">Message from Fundkaro</p>
+              <p className="text-sm text-blue-700">{loan.messageFromAdmin}</p>
             </div>
           </div>
-          <div className="rounded-lg p-4 bg-gradient-to-r from-lightPrimary to-darkPrimary text-white shadow-md mb-4">
-            <h3 className="font-bold text-center text-lg">Applied Profiles</h3>
-            <div className="flex gap-3 overflow-x-auto">
-              {loan.profilesId.map((profile, index) => (
-                <div key={index} className="border-blue-500 text-white bg-white/[.4] rounded-lg p-4 py-6 shadow"> 
-                  <p className="font-bold">{profile.fullName}</p>
-                  <p className="">{profile.phoneNo}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          {loan.message && (
-            <div className="rounded-lg p-4 bg-gradient-to-r from-lightPrimary to-darkPrimary text-white shadow-md mb-4">
-              <h3 className="font-bold text-center text-lg">Message from Fundkaro</h3>
-              <p className="text-center text-[20px] font-medium  mt-1">{loan.message}</p>
-            </div>
-          )}
-          <div className="rounded-lg p-4 bg-gradient-to-r from-lightPrimary to-darkPrimary text-white shadow-md mb-4">
-            <h3 className="font-bold text-center text-lg">My Form</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {loan.formFields.map((field, index) => (
-                <div key={index} className="py-4">
-                  <label htmlFor={field.name}>{field.name}</label>
-                  <input
-                    id={field.name}
-                    name={field.name}
-                    type={field.type}
-                    value={field.type === 'file' ? undefined : loan.formFields.find(item => item.name === field.name)?.value || ''}
-                    className="p-2 w-full border-blue-500 border rounded-lg"
-                    disabled={true}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="mb-10"></div>
         </div>
       )}
+      
+      {loan.status === 'Verified' && !loan.isSelectionDone && (
+        <Link to={`/select-loans/${loan._id}`} className="block w-full text-center px-4 py-3 rounded-lg font-semibold text-white bg-green-500 hover:bg-green-600 transition-colors">
+          Select & Apply
+        </Link>
+      )}
+    </div>
+  );
+};
+
+// --- TABS ---
+
+const ApplicationDetailsTab = ({ fields }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+    {fields.map(field => (
+      <div key={field.name}>
+        <label className="text-sm font-medium text-gray-500">{field.name}</label>
+        <p className="text-base text-gray-800 font-semibold mt-1 bg-gray-100 p-3 rounded-md">{field.value || 'Not Provided'}</p>
+      </div>
+    ))}
+  </div>
+);
+
+const DocumentsTab = ({ documents }) => {
+    const handleReupload = (docName) => {
+        // This would trigger a file input click in a real app
+        alert(`Initiating re-upload for ${docName}...`);
+    }
+
+    return (
+        <div className="space-y-4">
+            {documents.map(doc => {
+                const docStatus = statusConfig[doc.status] || {};
+                return (
+                    <div key={doc.name} className={`p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${docStatus.bg} ${docStatus.border}`}>
+                        <div className="flex items-center gap-4">
+                            <span className="text-2xl">{docStatus.icon}</span>
+                            <div>
+                                <p className={`font-semibold ${docStatus.text}`}>{doc.name}</p>
+                                {doc.status === 'Rejected' && <p className="text-sm text-red-700 mt-1">{doc.rejectionReason}</p>}
+                            </div>
+                        </div>
+                        <div className="flex gap-3 mt-2 sm:mt-0">
+                            <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">View</a>
+                            {doc.status === 'Rejected' && (
+                                <button onClick={() => handleReupload(doc.name)} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700">
+                                    <IoCloudUploadOutline/> Re-upload
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )
+            })}
+        </div>
+    );
+};
+
+const CommunicationTab = ({ messages }) => {
+    const [newMessage, setNewMessage] = useState("");
+
+    const handleSend = () => {
+        if (!newMessage.trim()) return;
+        // In a real app, this would send the message to your backend
+        alert(`Message sent: ${newMessage}`);
+        setNewMessage("");
+    }
+
+    return (
+        <div>
+            <div className="space-y-4 h-96 overflow-y-auto bg-gray-50 p-4 rounded-lg border">
+                {messages.map((msg, index) => (
+                    <div key={index} className={`flex ${msg.sender === 'You' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-md p-3 rounded-xl ${msg.sender === 'You' ? 'bg-blue-500 text-white' : 'bg-white text-gray-800 shadow-sm border'}`}>
+                            {msg.sender === 'Admin' && <p className="font-bold text-sm text-purple-600 mb-1">Admin</p>}
+                            <p>{msg.message}</p>
+                            <p className={`text-xs mt-2 ${msg.sender === 'You' ? 'text-blue-200' : 'text-gray-400'}`}>{msg.timestamp}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <div className="mt-4 flex gap-3">
+                <textarea 
+                    value={newMessage} 
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your reply here..." 
+                    className="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                />
+                <button onClick={handleSend} className="px-5 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400" disabled={!newMessage.trim()}>
+                    <IoPaperPlaneOutline size={20}/>
+                </button>
+            </div>
+        </div>
+    );
+};
+
+
+// --- MAIN COMPONENT ---
+
+const LoanDetails = () => {
+  const { user } = useContext(UserContext); // Ready for API call
+  const { loanID } = useParams();
+  const [loan, setLoan] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('details');
+
+  useEffect(() => {
+    const fetchApplication = async () => {
+      setLoading(true);
+      try {
+        // --- API call would go here ---
+        // const response = await axios.post("/api/application/findbyid", { userId: user.user, applicationId: loanID });
+        // if (response.data.status) {
+        //   setLoan(response.data.application);
+        // }
+
+        // Simulate API call with dummy data
+        setTimeout(() => {
+          setLoan(dummyLoanDetails);
+          setLoading(false);
+        }, 1200);
+
+      } catch (error) {
+        console.error("Failed to fetch loan details:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchApplication();
+  }, [loanID, user]);
+
+  const TABS = {
+    details: { label: 'Application Details', icon: <IoInformationCircleSharp/> },
+    documents: { label: 'Documents', icon: <IoDocumentTextSharp/> },
+    chat: { label: 'Communication', icon: <IoChatbubblesSharp/> },
+  };
+
+  if (loading) {
+    return (
+        <div className="w-full min-h-screen bg-gray-50">
+            <header className="fixed top-0 z-50 w-full bg-gradient-to-r from-darkPrimary to-lightPrimary flex h-16 items-center py-2 px-4 shadow-md">
+                <img src={logo} className="w-32 h-9 ml-4" alt="Logo" />
+            </header>
+            <main className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 animate-pulse'>
+                 <div className="h-6 w-48 bg-gray-300 rounded-md mb-8"></div>
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-1 space-y-6 p-6 bg-gray-200 rounded-xl">
+                        <div className="h-8 w-3/4 bg-gray-300 rounded"></div>
+                        <div className="h-16 w-full bg-gray-300 rounded"></div>
+                        <div className="h-10 w-1/2 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <div className="lg:col-span-2 p-6 bg-gray-200 rounded-xl">
+                        <div className="h-10 w-full bg-gray-300 rounded"></div>
+                        <div className="mt-6 h-64 w-full bg-gray-300 rounded"></div>
+                    </div>
+                 </div>
+            </main>
+        </div>
+    );
+  }
+
+  if (!loan) {
+    return (
+        <div className="text-center py-40">
+            <h2 className="text-2xl font-bold">Loan Application Not Found</h2>
+            <Link to="/applied-loans" className="text-blue-600 hover:underline mt-4 inline-block">Go back to my applications</Link>
+        </div>
+    )
+  }
+
+  return (
+    <div className='w-full min-h-screen bg-gray-50'>
+      <header className="fixed top-0 z-50 w-full bg-gradient-to-r from-darkPrimary to-lightPrimary flex h-16 items-center py-2 px-4 shadow-md">
+        <img src={logo} className="w-32 h-9 ml-4" alt="Logo" />
+      </header>
+      
+      <main className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12'>
+        <div className='mb-8'>
+            <Link to="/applied-loans" className='inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors'>
+                <IoIosArrowBack size={20} />
+                Back to All Applications
+            </Link>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            {/* --- Left Column: Summary (Sticky on large screens) --- */}
+            <div className="lg:col-span-1 lg:sticky top-24">
+                <ApplicationSummaryCard loan={loan} />
+            </div>
+
+            {/* --- Right Column: Tabbed Details --- */}
+            <div className="lg:col-span-2 bg-white rounded-xl shadow-md border border-gray-200">
+                <div className="border-b border-gray-200">
+                    <nav className="flex" aria-label="Tabs">
+                        {Object.keys(TABS).map(tabKey => (
+                            <button 
+                                key={tabKey} 
+                                onClick={() => setActiveTab(tabKey)}
+                                className={`flex items-center gap-2 whitespace-nowrap py-4 px-5 text-sm font-medium transition-colors
+                                    ${activeTab === tabKey 
+                                        ? 'border-b-2 border-blue-600 text-blue-600' 
+                                        : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                            >
+                                {TABS[tabKey].icon} {TABS[tabKey].label}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+                <div className="p-6">
+                    {activeTab === 'details' && <ApplicationDetailsTab fields={loan.formFields} />}
+                    {activeTab === 'documents' && <DocumentsTab documents={loan.documents} />}
+                    {activeTab === 'chat' && <CommunicationTab messages={loan.communications} />}
+                </div>
+            </div>
+        </div>
+      </main>
     </div>
   );
 };

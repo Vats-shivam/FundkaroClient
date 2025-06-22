@@ -85,6 +85,30 @@
     "nextStep": "photoId"
   },
   {
+    "id": "upload_pan",
+    "questionText": "Great! Please upload your PAN Card.",
+    "inputType": "image",
+    "key": "panCard",
+    "nextStep": "upload_aadhaar",
+    "documentType": "PAN Card",
+    "validation": {
+      "required": true,
+      "allowedTypes": ["image/jpeg", "image/png", "application/pdf"]
+    }
+  },
+  {
+    "id": "upload_aadhaar",
+    "questionText": "Thank you, {firstName}. Now, please upload your Aadhaar Card.",
+    "inputType": "image",
+    "key": "aadhaarCard",
+    "nextStep": "processing",
+    "documentType": "Aadhaar Card", 
+    "validation": {
+      "required": true,
+      "allowedTypes": ["image/jpeg", "image/png", "application/pdf"]
+    }
+  },
+  {
     "id": "photoId",
     "questionText": "Thank you. Now, please upload a photo of your ID (e.g., Driver's License).",
     "inputType": "image",

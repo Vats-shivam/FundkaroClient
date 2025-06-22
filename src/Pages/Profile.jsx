@@ -4,24 +4,35 @@ import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useUser } from "../context/UserContext"
 import { useProfiles } from "../context/ProfileContext"
-import { Toaster } from "react-hot-toast"
+import toast, { Toaster } from "react-hot-toast"
 import TopProfileBar from "../components/TopProfileBar"
 import ShowProfile from "../components/ShowProfile"
 import { IoIosArrowBack } from "react-icons/io"
 import { MdPerson, MdSwapHoriz } from "react-icons/md"
 import logo from "../assets/fundkaro.svg"
+import KYCVerificationModal from "../components/KYCVerificationModal"
+import MyDocuments from "../components/MyDocuments"
 
 const Profile = () => {
   const navigate = useNavigate()
   const { profileId } = useParams() // Get profile ID from URL params
-  const { user } = useUser()
-  const { profiles } = useProfiles()
+  const { user, setUser } = useUser()
+  const { profiles , setProfiles} = useProfiles()
 
   const [currentProfile, setCurrentProfile] = useState(null)
   const [isOwnProfile, setIsOwnProfile] = useState(true)
   const [showProfileSelector, setShowProfileSelector] = useState(false)
-
+  const [showKYCModal, setShowKYCModal] = useState(false)
+  const userWithDocs = {
+    ...user,
+    documents: [
+      { _id: 'doc1', name: 'PAN Card', fileUrl: '#', status: 'Verified', lastUpdated: '2023-10-20' },
+      { _id: 'doc2', name: 'Aadhaar Card', fileUrl: '#', status: 'Verified', lastUpdated: '2023-10-20' },
+      { _id: 'doc3', name: 'Bank Statement (Last 6 mo)', fileUrl: '#', status: 'Pending', lastUpdated: '2023-11-05' },
+    ]
+  };
   useEffect(() => {
+    setUser(userWithDocs)
     if (profileId) {
       // Looking at a specific profile
       const profile = profiles.find((p) => p._id === profileId)
@@ -56,7 +67,29 @@ const Profile = () => {
     }
     return profile.fullName || profile.email || profile.phoneNo || "Unknown User"
   }
+  const handleUpdateDocument = (docId) => {
+    // In a real app, this would open a file dialog to upload a new version
+    toast.success(`Update functionality for document ID: ${docId} would be triggered here.`);
+  };
 
+  const handleDeleteDocument = (docId) => {
+    if (window.confirm("Are you sure you want to delete this document? This cannot be undone.")) {
+      const updatedDocs = currentProfile.documents.filter(doc => doc._id !== docId);
+      
+      // Update state to reflect the change immediately
+      const updatedProfile = { ...currentProfile, documents: updatedDocs };
+      setCurrentProfile(updatedProfile);
+
+      // If you have a setUser in your context, you can update it globally
+      if (setUser) {
+        setUser(updatedProfile);
+      }
+      
+      toast.success("Document deleted successfully!");
+      // In a real app, you would make an API call here to delete from the server
+      // await axios.delete(`/api/user/documents/${docId}`);
+    }
+  };
   if (!currentProfile) {
     return (
       <div className="font-primaryFont min-h-screen w-screen bg-gray-50 flex items-center justify-center">
@@ -67,7 +100,9 @@ const Profile = () => {
       </div>
     )
   }
-
+  const handleKYC = () => {
+    setShowKYCModal(true)
+  }
   return (
     <div className="font-primaryFont min-h-screen w-screen bg-gray-50">
       {/* Fixed Header */}
@@ -139,16 +174,7 @@ const Profile = () => {
                           <div className="flex-1">
                             <p className="font-semibold">{getProfileDisplayName(profile)}</p>
                             <p className="text-xs opacity-75">{profile.email || profile.phoneNo}</p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              {profile.isDefault && (
-                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                                  Default
-                                </span>
-                              )}
-                              {profile.isKYCVerified && (
-                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">KYC</span>
-                              )}
-                            </div>
+                            
                           </div>
                           {!isOwnProfile && currentProfile._id === profile._id && (
                             <div className="ml-auto">
@@ -208,28 +234,33 @@ const Profile = () => {
         <div className="mb-8">
           <ShowProfile user={currentProfile} isOwnProfile={isOwnProfile} canEdit={isOwnProfile} />
         </div>
+        {isOwnProfile && currentProfile.documents && (
+          <div className="mb-8">
+            <MyDocuments
+              documents={currentProfile.documents}
+              onUpdate={handleUpdateDocument}
+              onDelete={handleDeleteDocument}
+            />
+          </div>
+        )}
+
 
         {/* Additional Actions for Other Profiles */}
         {!isOwnProfile && (
           <div className="mb-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Profile Actions</h3>
             <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => navigate(`/profile/${currentProfile._id}/edit`)}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                Edit Profile
-              </button>
+              
               {!currentProfile.isKYCVerified && (
                 <button
-                  onClick={() => navigate(`/kyc/${currentProfile._id}`)}
+                  onClick={() => handleKYC()}
                   className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   Complete KYC
                 </button>
               )}
               <button
-                onClick={() => navigate(`/loans?profileId=${currentProfile._id}`)}
+                onClick={() => navigate(`/dashboard`)}
                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
                 Apply for Loan
@@ -238,7 +269,20 @@ const Profile = () => {
           </div>
         )}
       </main>
-
+      {showKYCModal && (
+        <KYCVerificationModal
+          profile={currentProfile}
+          onClose={() => {
+            setShowKYCModal(false)
+            
+          }}
+          onSuccess={(updatedProfile) => {
+            const updatedProfiles = profiles.map((p) => (p._id === updatedProfile._id ? updatedProfile : p))
+            setProfiles(updatedProfiles)
+            setShowKYCModal(false)
+          }}
+        />
+      )}
       {/* Click outside to close dropdown */}
       {showProfileSelector && <div className="fixed inset-0 z-10" onClick={() => setShowProfileSelector(false)}></div>}
     </div>

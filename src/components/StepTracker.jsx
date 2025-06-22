@@ -15,8 +15,8 @@ const StepTracker = ({ currentStep, totalSteps, skippedSteps }) => {
       <div className="space-y-8">
         {steps.map((step) => {
           const isActive = step.number === currentStep;
-          const isCompleted = step.number < currentStep;
           const isSkipped = skippedSteps.includes(step.number);
+          const isCompleted = step.number < currentStep && !isSkipped;
           
           return (
             <div 

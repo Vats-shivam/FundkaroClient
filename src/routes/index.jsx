@@ -20,6 +20,7 @@ import MultiStepFormPage from "../Pages/MultiStepForm";
 import LoanForm from "../components/LoanForm";
 import { UserProvider } from "../context/UserContext";
 import { ProfileProvider } from "../context/ProfileContext";
+import SelectLoans from "../Pages/SelectLoans";
 
 axios.defaults.baseURL = 'http://localhost:8000';
 // axios.defaults.baseURL = 'https://fundkaro.in/api';
@@ -60,8 +61,9 @@ export const AppRoutes = () => {
               <Route path="/profile" element={<Profile/>}/>
               <Route path="/profile/:profileId" element={<Profile />} />
               <Route path="/documents/:userID" element={<Documents />} />
-              <Route path="/applied-loans/:userID" element={<AppliedLoans />} />
+              <Route path="/applied-loans" element={<AppliedLoans />} />
               <Route path="/loan-details/:loanID" element={<LoanDetails/>} />
+              <Route path="/select-loans/:applicationId" element={<SelectLoans/>} />
               <Route path="/success" element={<SuccessPage/>}/>
               <Route path="/blogs/:internalName" element={<BlogPage />} />
             </Route>

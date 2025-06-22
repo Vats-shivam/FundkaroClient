@@ -35,7 +35,7 @@ const TypingIndicator = () => (
 );
 
 // Main Chatbot Component
-function LoanForm({isVisible,onClose}) {
+function LoanForm({isVisible,onClose, existingDocuments = []}) {
   const [messages, setMessages] = useState([]);
   const [userData, setUserData] = useState({});
   const [currentStepId, setCurrentStepId] = useState('start');
@@ -45,6 +45,7 @@ function LoanForm({isVisible,onClose}) {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const chatEndRef = useRef(null);
+  const [fileInputMode, setFileInputMode] = useState('initial'); // 'initial' | 'select'
 
   const currentStep = loanFlow.find(step => step.id === currentStepId);
 
@@ -84,6 +85,10 @@ function LoanForm({isVisible,onClose}) {
     if (stepKey) {
       setUserData(prev => ({ ...prev, [stepKey]: value }));
     }
+    
+    // NEW: Reset file input mode for the next step
+    setFileInputMode('initial'); 
+    
     setCurrentStepId(nextStepId || currentStep.nextStep);
     setInputValue('');
     setError(null);
@@ -148,6 +153,11 @@ function LoanForm({isVisible,onClose}) {
     addMessage('user', filePreview);
     handleNextStep(file, currentStep.nextStep);
   };
+  const handleExistingDocSelect = (doc) => {
+    addMessage('user', `Selected: ${doc.name}`);
+    // Pass the document object itself. The backend can use its ID or URL.
+    handleNextStep(doc, currentStep.nextStep);
+  };
 
   const renderInput = () => {
     if (!currentStep || currentStep.inputType === null || currentStep.inputType === 'final' || currentStep.id === 'end') {
@@ -183,35 +193,76 @@ function LoanForm({isVisible,onClose}) {
             ))}
           </div>
         );
-      case 'file':
-      case 'image':
-        return (
-          <>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              className="hidden"
-              accept={currentStep.validation?.allowedTypes?.join(',')}
-            />
-            <button onClick={() => fileInputRef.current.click()} className="bg-white border border-indigo-500 text-indigo-500 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-500 hover:text-white transition-colors">
-              {currentStep.inputType === 'image' ? 'Upload Image' : 'Upload File'}
-            </button>
-          </>
-        );
-      default:
-        return null;
-    }
-  };
-  useEffect(() => {
-    if (currentStepId === "end") {
-      const timer = setTimeout(() => {
-        navigate("/dashboard")
-      }, 5000)
-      return () => clearTimeout(timer)
-    }
-  }, [currentStepId, navigate])
-if (!isVisible) return null
+        case 'file':
+        case 'image':
+            // --- THIS ENTIRE BLOCK IS UPDATED ---
+            
+            // Filter documents based on the `documentType` in the config
+            const relevantDocs = existingDocuments.filter(doc => 
+                currentStep.documentType ? doc.name.toLowerCase().includes(currentStep.documentType.toLowerCase()) : true
+            );
+    
+            if (fileInputMode === 'select') {
+              return (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-gray-700">Select an existing document:</h3>
+                  <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
+                      {relevantDocs.map(doc => (
+                          <button 
+                              key={doc._id}
+                              onClick={() => handleExistingDocSelect(doc)}
+                              className="w-full text-left p-2 bg-white border rounded-lg hover:bg-gray-100"
+                          >
+                              {doc.name} <span className="text-xs text-gray-500">({doc.status})</span>
+                          </button>
+                      ))}
+                  </div>
+                  <button onClick={() => setFileInputMode('initial')} className="text-sm text-indigo-600 hover:underline">
+                    Back
+                  </button>
+                </div>
+              );
+            }
+    
+            // Default view: Show initial choices
+            return (
+              <>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept={currentStep.validation?.allowedTypes?.join(',')}
+                />
+                <div className="flex flex-wrap gap-3">
+                  <button onClick={() => fileInputRef.current.click()} className="flex-1 bg-white border border-indigo-500 text-indigo-500 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-500 hover:text-white transition-colors">
+                    Upload New File
+                  </button>
+                  <button 
+                    onClick={() => setFileInputMode('select')} 
+                    disabled={relevantDocs.length === 0}
+                    className="flex-1 bg-white border border-indigo-500 text-indigo-500 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-500 hover:text-white transition-colors disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300 disabled:cursor-not-allowed"
+                  >
+                    Select from My Documents ({relevantDocs.length})
+                  </button>
+                </div>
+              </>
+            );
+          
+          default:
+            return null;
+        }
+      };
+    
+      useEffect(() => {
+        if (currentStepId === "end") {
+          const timer = setTimeout(() => navigate("/dashboard"), 5000);
+          return () => clearTimeout(timer);
+        }
+      }, [currentStepId, navigate]);
+    
+      if (!isVisible) return null;
+    
 
   return (
     <div className="fixed text-black inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">

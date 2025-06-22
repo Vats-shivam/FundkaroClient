@@ -29,7 +29,7 @@ export const ProfileProvider = ({ children }) => {
       isKYCVerified: true,
       isProfileCompleted: true,
       isVerified: true,
-      isDefault: true,
+   
       creditReportPulled: true,
       panCardNumber: "ABCDE1234F",
       aadharCardNumber: "123456789012",
@@ -46,7 +46,7 @@ export const ProfileProvider = ({ children }) => {
       isKYCVerified: false,
       isProfileCompleted: true,
       isVerified: true,
-      isDefault: false,
+      
       creditReportPulled: false,
       interestedLoan: "carloan",
     },
@@ -61,7 +61,7 @@ export const ProfileProvider = ({ children }) => {
       isKYCVerified: false,
       isProfileCompleted: false,
       isVerified: true,
-      isDefault: false,
+      
       creditReportPulled: false,
     },
   ])

@@ -42,7 +42,6 @@ const AddAccountModal = ({ onClose, onSuccess }) => {
             email: `${formData.fullName.toLowerCase().replace(" ", ".")}@example.com`,
             isKYCVerified: true,
             isProfileCompleted: true,
-            isDefault: false,
             firstName: formData.fullName.split(" ")[0],
             lastName: formData.fullName.split(" ")[1] || "",
           }
@@ -78,7 +77,6 @@ const AddAccountModal = ({ onClose, onSuccess }) => {
           email: null,
           isKYCVerified: false,
           isProfileCompleted: false,
-          isDefault: false,
           firstName: formData.fullName.split(" ")[0],
           lastName: formData.fullName.split(" ")[1] || "",
         }
