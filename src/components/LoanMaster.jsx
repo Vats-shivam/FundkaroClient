@@ -4,36 +4,36 @@ import { useNavigate } from 'react-router-dom'
 
 
 const LoanMaster = () => {
-const dummyCategories = [
+  const dummyCategories = [
     {
       _id: "1",
       category: "Home Loan",
-      logo: "/placeholder.svg?height=40&width=40",
+      logo: "https://img.icons8.com/ios-filled/50/home.png", // Example home icon
     },
     {
       _id: "2",
       category: "Personal Loan",
-      logo: "/placeholder.svg?height=40&width=40",
+      logo: "https://img.icons8.com/ios-filled/50/human-resources.png", // Example personal icon
     },
     {
       _id: "3",
       category: "Car Loan",
-      logo: "/placeholder.svg?height=40&width=40",
+      logo: "https://img.icons8.com/ios-filled/50/car--v1.png", // Example car icon
     },
     {
       _id: "4",
       category: "Business Loan",
-      logo: "/placeholder.svg?height=40&width=40",
+      logo: "https://img.icons8.com/ios-filled/50/business.png", // Example business icon
     },
     {
       _id: "5",
       category: "Education Loan",
-      logo: "/placeholder.svg?height=40&width=40",
+      logo: "https://img.icons8.com/ios-filled/50/school.png", // Example education icon
     },
     {
       _id: "6",
       category: "Gold Loan",
-      logo: "/placeholder.svg?height=40&width=40",
+      logo: "https://img.icons8.com/ios-filled/50/gold-bars.png", // Example gold icon
     },
   ]
   const [categories, setCategories] =useState(dummyCategories);
